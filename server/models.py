@@ -50,6 +50,7 @@ class Plans(db.Model,SerializerMixin):
     id=db.Column(db.Integer,primary_key=True)
     name=db.Column(db.String,nullable=False) # free ,silver ,gold
     cost=db.Column(db.Float,nullable=False,default=0.0)
+    description=db.Column(db.String,nullable=False)
     job_limit=db.Column(db.Integer,nullable=True) #Null for unlimited days 
     duration_days=db.Column(db.Integer,nullable=True)
     
@@ -92,23 +93,28 @@ class Subscription(db.Model,SerializerMixin):
         if self.plan.job_limit is not None:
             return self.plan.job_limit-len(self.user.jobs)
         
+    @classmethod
+    def expired_subscriptions(cls):
+        return cls.query.filter(cls.end_date < datetime.now(timezone(timedelta(hours=3)))).all()
+
+        
 class Jobs(db.Model,SerializerMixin):
-    __tablename__='company_subscription'
+    __tablename__='jobs'
     id=db.Column(db.Integer,primary_key=True)
-    title=db.Column(db.String,nullabe=False)
+    title=db.Column(db.String,nullable=False)
     description=db.Column(db.Text,nullable=False)
     created_at=db.Column(db.DateTime,default=lambda:datetime.now(timezone(timedelta(hours=3))))
     user_id=db.Column(db.Integer,db.ForeignKey('users.id'))
     
-    users=db.relationship('User',back_populates='jobs')
+    user=db.relationship('User',back_populates='jobs')
     
-    serialize_rules=('users.jobs',)
+    serialize_rules=('-user.jobs',)
     
 class Payments(db.Model):
     __tablename__='payments'
     id=db.Column(db.Integer,primary_key=True)
     amount=db.Column(db.Float,nullable=False)
-    phone_number=db.Column(db.string,nullable=False)
+    phone_number=db.Column(db.String,nullable=False)
     timestamp = db.Column(db.DateTime, default=lambda: datetime.now(timezone(timedelta(hours=3))))
     transaction_reference = db.Column(db.String, nullable=False, unique=True)
     

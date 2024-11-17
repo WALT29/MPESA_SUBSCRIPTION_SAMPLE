@@ -17,9 +17,6 @@ app.json.compact = False
 app.register_blueprint(mpesa_bp)
 
 api=Api(app)
-
-
-
 db.init_app(app)
 
 #############################################################################USER RESOURCE#############################################################################
@@ -116,8 +113,12 @@ class Plan(Resource):
         if not description or not isinstance(description,str):
             errors.append("Enter description and description must be a string")
         
-        if not cost or not isinstance(cost,float):
-            errors.append("Enter the price of the package and price must be float")
+        try:
+            cost = float(cost) 
+            if cost < 0:
+                errors.append("Cost must be greater or equal to zero")
+        except ValueError:
+            errors.append("Enter a valid cost value, it must be a number")
         
         if errors:
             return make_response(

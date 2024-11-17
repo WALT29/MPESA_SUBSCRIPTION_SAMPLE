@@ -15,8 +15,8 @@ class User(db.Model,SerializerMixin):
     phone_number=db.Column(db.String,nullable=False)
     password=db.Column(db.String,nullable=False)
     
-    jobs=db.relationship('Jobs',back_populates='user',cascades='all delete-orphan')
-    subscriptions=db.relationship('Subscription',back_populates='users',cascades='all delete-orphan')
+    jobs=db.relationship('Jobs',back_populates='user',cascade='all, delete-orphan')
+    subscriptions=db.relationship('Subscription',back_populates='user',cascade='all, delete-orphan')
     plans=association_proxy('subscriptions','Plan',creator=lambda plan_obj:Subscription(plan=plan_obj))
     
     payments=db.relationship('Payments',back_populates='user')
@@ -54,7 +54,8 @@ class Plans(db.Model,SerializerMixin):
     job_limit=db.Column(db.Integer,nullable=True) #Null for unlimited days 
     duration_days=db.Column(db.Integer,nullable=True)
     
-    subscriptions=db.relationship('Subscription',back_populates='plans',cascades='all delete-orphan')
+    subscriptions=db.relationship('Subscription',back_populates='plan',cascade='all, delete-orphan')
+    payments=db.relationship('Payments',back_populates='plan')
     users=association_proxy('subscriptions','User',creator=lambda user_obj:Subscription(user=user_obj))
     
     serialize_rules=('-subscriptions','users.plans')

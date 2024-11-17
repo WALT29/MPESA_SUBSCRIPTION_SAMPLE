@@ -69,7 +69,7 @@ class Subscription(db.Model,SerializerMixin):
     
     def remaining_jobs(self):
         if self.plan.job_limit is not None:
-            return self.plan.job_limit-len(self.company.jobs)
+            return self.plan.job_limit-len(self.user.jobs)
         
 class Jobs(db.Model,SerializerMixin):
     __tablename__='company_subscription'

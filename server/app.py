@@ -41,9 +41,7 @@ class Users(Resource):
         name=data['name']
         phone_number=data['phone_number']
         password=data['password']
-        
-        errors=[]
-        
+            
         errors=[]
         if len(name)<2:
             errors.append("Name is required and name should be at least 3 characters")
@@ -88,7 +86,7 @@ class Users_by_id(Resource):
 
 api.add_resource(Users_by_id,'/users/<int:id>') 
             
-################################ PLANS RESOURCE ####################################
+################################ PLANS RESOURCE ##########################################################
 class Plan(Resource):
     def get(self):
         plans=[plan.to_dict() for plan in Plans.query.all()]
@@ -107,8 +105,8 @@ class Plan(Resource):
         name=data['name']
         description=data['description']
         cost=data['cost']
-        job_limit=data['job_limit']
-        duration_days=data['duration_days']
+        job_limit=data.get('job_limit',None)
+        duration_days=data.get('duration_days',None)
         
         
         errors=[]
@@ -142,43 +140,33 @@ class Subscriptions(Resource):
         if not subscriptions:
             return make_response({
                 "error":"No subscriptions found"
-            },400)
+            },404)
         
-        return make_response(subscriptions.to_dict(),200)
+        return make_response(subscriptions,200)
     
     
     def post(self):
         data=request.get_json()
         user_id=data['user_id']
         plan_id=data['plan_id']
+        #here i validate payment if the payment is a success
+        payment=Payments.query.filter_by(user_id=user_id,plan_id=plan_id,payment_status='success').first()
         
-        user=User.query.filter_by(id=id).first()
-        plan=Plan.query.filter_by(id=id).first()
+        if not payment:
+            return make_response({"error": "No successful payment found for this plan"}, 400)
         
-        if not user:
-            return make_response({
-                "error":"The user with that id is not found"
-            })
+        #here i check if the user has an active subscription
+        active_subscription=Subscription.query.filter_by(user_id=user_id, plan_id=plan_id).first()
         
-        if not plan:
-            return make_response({
-                "error":"The plan of that id is not found"
-            })
+        if active_subscription and active_subscription.is_active():
+            return make_response({"error": "User already has an active subscription for this plan"}, 400)
         
-        new_sub=Subscription(user_id=user_id,plan_Id=plan_id)
+        # After i check that the user has no active subscription ,I add a new subscription
+        new_sub = Subscription(user_id=user_id, plan_Id=plan_id)
         db.session.add(new_sub)
-        db.session.commit()
-        
+        db.session.commit()        
         return make_response(new_sub.to_dict(),201)
     
-
-
-
-
-
-
-
-
 
     
 if __name__ == '__main__':

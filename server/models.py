@@ -34,7 +34,7 @@ class User(db.Model,SerializerMixin):
     
     @classmethod
     def get_by_phonenumber(cls,number):
-        cls.query.filter_by(phone_number=number).first()
+        return cls.query.filter_by(phone_number=number).first()
     
     def save(self):
         db.session.add(self)
@@ -117,7 +117,7 @@ class Payments(db.Model):
     phone_number=db.Column(db.String,nullable=False)
     timestamp = db.Column(db.DateTime, default=lambda: datetime.now(timezone(timedelta(hours=3))))
     transaction_reference = db.Column(db.String, nullable=False, unique=True)
-    
+    payment_status = db.Column(db.String, nullable=False, default="pending")  # (pending, success, failed)
     plan_id=db.Column(db.Integer,db.ForeignKey('plans.id'))
     user_id=db.Column(db.Integer,db.ForeignKey('users.id'))
     
